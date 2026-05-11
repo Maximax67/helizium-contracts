@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "types": ["@nomicfoundation/hardhat-toolbox-mocha-ethers"]
+  },
+  "include": ["./scripts/**/*.ts", "./test/**/*.ts", "./hardhat.config.ts"],
+  "files": ["./hardhat.config.ts"]
+}
