@@ -6,14 +6,13 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface TaskEscrowInterface extends Interface {
-    getFunction(nameOrSignature: "MAX_FEE_BP" | "MAX_TASK_ID_LEN" | "approveWork" | "assignFreelancer" | "cancelTask" | "feeBasisPoints" | "feeRecipient" | "fundTask" | "getContractBalance" | "getTask" | "getTaskState" | "owner" | "pause" | "paused" | "pendingWithdrawals" | "raiseDispute" | "renounceOwnership" | "resolveDispute" | "setFeeBasisPoints" | "setFeeRecipient" | "submitWork" | "transferOwnership" | "unpause" | "withdraw"): FunctionFragment;
+    getFunction(nameOrSignature: "MAX_FEE_BP" | "MAX_ID_LEN" | "adminRelease" | "cancelTask" | "feeBasisPoints" | "feeRecipient" | "fundTask" | "getContractBalance" | "getTask" | "getTaskState" | "owner" | "pause" | "paused" | "pendingWithdrawals" | "raiseDispute" | "releaseToFreelancer" | "renounceOwnership" | "resolveDispute" | "setFeeBasisPoints" | "setFeeRecipient" | "transferOwnership" | "unpause" | "withdraw"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "DisputeRaised" | "DisputeResolved" | "FeeBasisPointsUpdated" | "FeeRecipientUpdated" | "FreelancerAssigned" | "OwnershipTransferred" | "Paused" | "TaskCancelled" | "TaskCompleted" | "TaskFunded" | "Unpaused" | "Withdrawn" | "WorkSubmitted"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "AdminReleased" | "DisputeRaised" | "DisputeResolved" | "FeeBasisPointsUpdated" | "FeeRecipientUpdated" | "OwnershipTransferred" | "Paused" | "TaskCancelled" | "TaskCompleted" | "TaskFunded" | "Unpaused" | "Withdrawn"): EventFragment;
 
     encodeFunctionData(functionFragment: 'MAX_FEE_BP', values?: undefined): string;
-encodeFunctionData(functionFragment: 'MAX_TASK_ID_LEN', values?: undefined): string;
-encodeFunctionData(functionFragment: 'approveWork', values: [string]): string;
-encodeFunctionData(functionFragment: 'assignFreelancer', values: [string, AddressLike]): string;
+encodeFunctionData(functionFragment: 'MAX_ID_LEN', values?: undefined): string;
+encodeFunctionData(functionFragment: 'adminRelease', values: [string, AddressLike]): string;
 encodeFunctionData(functionFragment: 'cancelTask', values: [string]): string;
 encodeFunctionData(functionFragment: 'feeBasisPoints', values?: undefined): string;
 encodeFunctionData(functionFragment: 'feeRecipient', values?: undefined): string;
@@ -26,19 +25,18 @@ encodeFunctionData(functionFragment: 'pause', values?: undefined): string;
 encodeFunctionData(functionFragment: 'paused', values?: undefined): string;
 encodeFunctionData(functionFragment: 'pendingWithdrawals', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'raiseDispute', values: [string]): string;
+encodeFunctionData(functionFragment: 'releaseToFreelancer', values: [string, AddressLike]): string;
 encodeFunctionData(functionFragment: 'renounceOwnership', values?: undefined): string;
-encodeFunctionData(functionFragment: 'resolveDispute', values: [string, boolean]): string;
+encodeFunctionData(functionFragment: 'resolveDispute', values: [string, AddressLike]): string;
 encodeFunctionData(functionFragment: 'setFeeBasisPoints', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'setFeeRecipient', values: [AddressLike]): string;
-encodeFunctionData(functionFragment: 'submitWork', values: [string]): string;
 encodeFunctionData(functionFragment: 'transferOwnership', values: [AddressLike]): string;
 encodeFunctionData(functionFragment: 'unpause', values?: undefined): string;
 encodeFunctionData(functionFragment: 'withdraw', values?: undefined): string;
 
     decodeFunctionResult(functionFragment: 'MAX_FEE_BP', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'MAX_TASK_ID_LEN', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'approveWork', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'assignFreelancer', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'MAX_ID_LEN', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'adminRelease', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'cancelTask', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'feeBasisPoints', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'feeRecipient', data: BytesLike): Result;
@@ -51,17 +49,29 @@ decodeFunctionResult(functionFragment: 'pause', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'paused', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'pendingWithdrawals', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'raiseDispute', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'releaseToFreelancer', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'renounceOwnership', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'resolveDispute', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'setFeeBasisPoints', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'setFeeRecipient', data: BytesLike): Result;
-decodeFunctionResult(functionFragment: 'submitWork', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'transferOwnership', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'unpause', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
   }
 
   
+    export namespace AdminReleasedEvent {
+      export type InputTuple = [taskKey: BytesLike, recipient: AddressLike, amount: BigNumberish];
+      export type OutputTuple = [taskKey: string, recipient: string, amount: bigint];
+      export interface OutputObject {taskKey: string, recipient: string, amount: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
     export namespace DisputeRaisedEvent {
       export type InputTuple = [taskKey: BytesLike, raisedBy: AddressLike];
       export type OutputTuple = [taskKey: string, raisedBy: string];
@@ -75,9 +85,9 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
   
 
     export namespace DisputeResolvedEvent {
-      export type InputTuple = [taskKey: BytesLike, favorFreelancer: boolean, resolvedBy: AddressLike];
-      export type OutputTuple = [taskKey: string, favorFreelancer: boolean, resolvedBy: string];
-      export interface OutputObject {taskKey: string, favorFreelancer: boolean, resolvedBy: string };
+      export type InputTuple = [taskKey: BytesLike, recipient: AddressLike, amount: BigNumberish];
+      export type OutputTuple = [taskKey: string, recipient: string, amount: bigint];
+      export interface OutputObject {taskKey: string, recipient: string, amount: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -102,18 +112,6 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
       export type InputTuple = [oldRecipient: AddressLike, newRecipient: AddressLike];
       export type OutputTuple = [oldRecipient: string, newRecipient: string];
       export interface OutputObject {oldRecipient: string, newRecipient: string };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace FreelancerAssignedEvent {
-      export type InputTuple = [taskKey: BytesLike, client: AddressLike, freelancer: AddressLike];
-      export type OutputTuple = [taskKey: string, client: string, freelancer: string];
-      export interface OutputObject {taskKey: string, client: string, freelancer: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -159,9 +157,9 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
   
 
     export namespace TaskCompletedEvent {
-      export type InputTuple = [taskKey: BytesLike, client: AddressLike, freelancer: AddressLike, freelancerPayout: BigNumberish, platformFee: BigNumberish];
-      export type OutputTuple = [taskKey: string, client: string, freelancer: string, freelancerPayout: bigint, platformFee: bigint];
-      export interface OutputObject {taskKey: string, client: string, freelancer: string, freelancerPayout: bigint, platformFee: bigint };
+      export type InputTuple = [taskKey: BytesLike, freelancer: AddressLike, payout: BigNumberish, fee: BigNumberish];
+      export type OutputTuple = [taskKey: string, freelancer: string, payout: bigint, fee: bigint];
+      export interface OutputObject {taskKey: string, freelancer: string, payout: bigint, fee: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -198,18 +196,6 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
       export type InputTuple = [to: AddressLike, amount: BigNumberish];
       export type OutputTuple = [to: string, amount: bigint];
       export interface OutputObject {to: string, amount: bigint };
-      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
-      export type Filter = TypedDeferredTopicFilter<Event>
-      export type Log = TypedEventLog<Event>
-      export type LogDescription = TypedLogDescription<Event>
-    }
-
-  
-
-    export namespace WorkSubmittedEvent {
-      export type InputTuple = [taskKey: BytesLike, freelancer: AddressLike];
-      export type OutputTuple = [taskKey: string, freelancer: string];
-      export interface OutputObject {taskKey: string, freelancer: string };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -260,7 +246,7 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
     
 
     
-    MAX_TASK_ID_LEN: TypedContractMethod<
+    MAX_ID_LEN: TypedContractMethod<
       [],
       [bigint],
       'view'
@@ -268,16 +254,8 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
     
 
     
-    approveWork: TypedContractMethod<
-      [taskDbId: string, ],
-      [void],
-      'nonpayable'
-    >
-    
-
-    
-    assignFreelancer: TypedContractMethod<
-      [taskDbId: string, freelancer: AddressLike, ],
+    adminRelease: TypedContractMethod<
+      [taskDbId: string, recipient: AddressLike, ],
       [void],
       'nonpayable'
     >
@@ -326,7 +304,7 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
     
     getTask: TypedContractMethod<
       [taskDbId: string, ],
-      [[string, string, bigint, bigint, bigint, bigint] & {client: string, freelancer: string, amount: bigint, state: bigint, fundedAt: bigint, completedAt: bigint }],
+      [[string, bigint, bigint, bigint, bigint] & {client: string, amount: bigint, state: bigint, fundedAt: bigint, settledAt: bigint }],
       'view'
     >
     
@@ -380,6 +358,14 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
     
 
     
+    releaseToFreelancer: TypedContractMethod<
+      [taskDbId: string, freelancer: AddressLike, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     renounceOwnership: TypedContractMethod<
       [],
       [void],
@@ -389,7 +375,7 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
 
     
     resolveDispute: TypedContractMethod<
-      [taskDbId: string, favorFreelancer: boolean, ],
+      [taskDbId: string, recipient: AddressLike, ],
       [void],
       'nonpayable'
     >
@@ -406,14 +392,6 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
     
     setFeeRecipient: TypedContractMethod<
       [newRecipient: AddressLike, ],
-      [void],
-      'nonpayable'
-    >
-    
-
-    
-    submitWork: TypedContractMethod<
-      [taskDbId: string, ],
       [void],
       'nonpayable'
     >
@@ -451,18 +429,13 @@ decodeFunctionResult(functionFragment: 'withdraw', data: BytesLike): Result;
       [bigint],
       'view'
     >;
-getFunction(nameOrSignature: 'MAX_TASK_ID_LEN'): TypedContractMethod<
+getFunction(nameOrSignature: 'MAX_ID_LEN'): TypedContractMethod<
       [],
       [bigint],
       'view'
     >;
-getFunction(nameOrSignature: 'approveWork'): TypedContractMethod<
-      [taskDbId: string, ],
-      [void],
-      'nonpayable'
-    >;
-getFunction(nameOrSignature: 'assignFreelancer'): TypedContractMethod<
-      [taskDbId: string, freelancer: AddressLike, ],
+getFunction(nameOrSignature: 'adminRelease'): TypedContractMethod<
+      [taskDbId: string, recipient: AddressLike, ],
       [void],
       'nonpayable'
     >;
@@ -493,7 +466,7 @@ getFunction(nameOrSignature: 'getContractBalance'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'getTask'): TypedContractMethod<
       [taskDbId: string, ],
-      [[string, string, bigint, bigint, bigint, bigint] & {client: string, freelancer: string, amount: bigint, state: bigint, fundedAt: bigint, completedAt: bigint }],
+      [[string, bigint, bigint, bigint, bigint] & {client: string, amount: bigint, state: bigint, fundedAt: bigint, settledAt: bigint }],
       'view'
     >;
 getFunction(nameOrSignature: 'getTaskState'): TypedContractMethod<
@@ -526,13 +499,18 @@ getFunction(nameOrSignature: 'raiseDispute'): TypedContractMethod<
       [void],
       'nonpayable'
     >;
+getFunction(nameOrSignature: 'releaseToFreelancer'): TypedContractMethod<
+      [taskDbId: string, freelancer: AddressLike, ],
+      [void],
+      'nonpayable'
+    >;
 getFunction(nameOrSignature: 'renounceOwnership'): TypedContractMethod<
       [],
       [void],
       'nonpayable'
     >;
 getFunction(nameOrSignature: 'resolveDispute'): TypedContractMethod<
-      [taskDbId: string, favorFreelancer: boolean, ],
+      [taskDbId: string, recipient: AddressLike, ],
       [void],
       'nonpayable'
     >;
@@ -543,11 +521,6 @@ getFunction(nameOrSignature: 'setFeeBasisPoints'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'setFeeRecipient'): TypedContractMethod<
       [newRecipient: AddressLike, ],
-      [void],
-      'nonpayable'
-    >;
-getFunction(nameOrSignature: 'submitWork'): TypedContractMethod<
-      [taskDbId: string, ],
       [void],
       'nonpayable'
     >;
@@ -567,11 +540,11 @@ getFunction(nameOrSignature: 'withdraw'): TypedContractMethod<
       'nonpayable'
     >;
 
-    getEvent(key: 'DisputeRaised'): TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
+    getEvent(key: 'AdminReleased'): TypedContractEvent<AdminReleasedEvent.InputTuple, AdminReleasedEvent.OutputTuple, AdminReleasedEvent.OutputObject>;
+getEvent(key: 'DisputeRaised'): TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
 getEvent(key: 'DisputeResolved'): TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
 getEvent(key: 'FeeBasisPointsUpdated'): TypedContractEvent<FeeBasisPointsUpdatedEvent.InputTuple, FeeBasisPointsUpdatedEvent.OutputTuple, FeeBasisPointsUpdatedEvent.OutputObject>;
 getEvent(key: 'FeeRecipientUpdated'): TypedContractEvent<FeeRecipientUpdatedEvent.InputTuple, FeeRecipientUpdatedEvent.OutputTuple, FeeRecipientUpdatedEvent.OutputObject>;
-getEvent(key: 'FreelancerAssigned'): TypedContractEvent<FreelancerAssignedEvent.InputTuple, FreelancerAssignedEvent.OutputTuple, FreelancerAssignedEvent.OutputObject>;
 getEvent(key: 'OwnershipTransferred'): TypedContractEvent<OwnershipTransferredEvent.InputTuple, OwnershipTransferredEvent.OutputTuple, OwnershipTransferredEvent.OutputObject>;
 getEvent(key: 'Paused'): TypedContractEvent<PausedEvent.InputTuple, PausedEvent.OutputTuple, PausedEvent.OutputObject>;
 getEvent(key: 'TaskCancelled'): TypedContractEvent<TaskCancelledEvent.InputTuple, TaskCancelledEvent.OutputTuple, TaskCancelledEvent.OutputObject>;
@@ -579,15 +552,18 @@ getEvent(key: 'TaskCompleted'): TypedContractEvent<TaskCompletedEvent.InputTuple
 getEvent(key: 'TaskFunded'): TypedContractEvent<TaskFundedEvent.InputTuple, TaskFundedEvent.OutputTuple, TaskFundedEvent.OutputObject>;
 getEvent(key: 'Unpaused'): TypedContractEvent<UnpausedEvent.InputTuple, UnpausedEvent.OutputTuple, UnpausedEvent.OutputObject>;
 getEvent(key: 'Withdrawn'): TypedContractEvent<WithdrawnEvent.InputTuple, WithdrawnEvent.OutputTuple, WithdrawnEvent.OutputObject>;
-getEvent(key: 'WorkSubmitted'): TypedContractEvent<WorkSubmittedEvent.InputTuple, WorkSubmittedEvent.OutputTuple, WorkSubmittedEvent.OutputObject>;
 
     filters: {
       
+      'AdminReleased(bytes32,address,uint256)': TypedContractEvent<AdminReleasedEvent.InputTuple, AdminReleasedEvent.OutputTuple, AdminReleasedEvent.OutputObject>;
+      AdminReleased: TypedContractEvent<AdminReleasedEvent.InputTuple, AdminReleasedEvent.OutputTuple, AdminReleasedEvent.OutputObject>;
+    
+
       'DisputeRaised(bytes32,address)': TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
       DisputeRaised: TypedContractEvent<DisputeRaisedEvent.InputTuple, DisputeRaisedEvent.OutputTuple, DisputeRaisedEvent.OutputObject>;
     
 
-      'DisputeResolved(bytes32,bool,address)': TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
+      'DisputeResolved(bytes32,address,uint256)': TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
       DisputeResolved: TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
     
 
@@ -597,10 +573,6 @@ getEvent(key: 'WorkSubmitted'): TypedContractEvent<WorkSubmittedEvent.InputTuple
 
       'FeeRecipientUpdated(address,address)': TypedContractEvent<FeeRecipientUpdatedEvent.InputTuple, FeeRecipientUpdatedEvent.OutputTuple, FeeRecipientUpdatedEvent.OutputObject>;
       FeeRecipientUpdated: TypedContractEvent<FeeRecipientUpdatedEvent.InputTuple, FeeRecipientUpdatedEvent.OutputTuple, FeeRecipientUpdatedEvent.OutputObject>;
-    
-
-      'FreelancerAssigned(bytes32,address,address)': TypedContractEvent<FreelancerAssignedEvent.InputTuple, FreelancerAssignedEvent.OutputTuple, FreelancerAssignedEvent.OutputObject>;
-      FreelancerAssigned: TypedContractEvent<FreelancerAssignedEvent.InputTuple, FreelancerAssignedEvent.OutputTuple, FreelancerAssignedEvent.OutputObject>;
     
 
       'OwnershipTransferred(address,address)': TypedContractEvent<OwnershipTransferredEvent.InputTuple, OwnershipTransferredEvent.OutputTuple, OwnershipTransferredEvent.OutputObject>;
@@ -615,7 +587,7 @@ getEvent(key: 'WorkSubmitted'): TypedContractEvent<WorkSubmittedEvent.InputTuple
       TaskCancelled: TypedContractEvent<TaskCancelledEvent.InputTuple, TaskCancelledEvent.OutputTuple, TaskCancelledEvent.OutputObject>;
     
 
-      'TaskCompleted(bytes32,address,address,uint256,uint256)': TypedContractEvent<TaskCompletedEvent.InputTuple, TaskCompletedEvent.OutputTuple, TaskCompletedEvent.OutputObject>;
+      'TaskCompleted(bytes32,address,uint256,uint256)': TypedContractEvent<TaskCompletedEvent.InputTuple, TaskCompletedEvent.OutputTuple, TaskCompletedEvent.OutputObject>;
       TaskCompleted: TypedContractEvent<TaskCompletedEvent.InputTuple, TaskCompletedEvent.OutputTuple, TaskCompletedEvent.OutputObject>;
     
 
@@ -629,10 +601,6 @@ getEvent(key: 'WorkSubmitted'): TypedContractEvent<WorkSubmittedEvent.InputTuple
 
       'Withdrawn(address,uint256)': TypedContractEvent<WithdrawnEvent.InputTuple, WithdrawnEvent.OutputTuple, WithdrawnEvent.OutputObject>;
       Withdrawn: TypedContractEvent<WithdrawnEvent.InputTuple, WithdrawnEvent.OutputTuple, WithdrawnEvent.OutputObject>;
-    
-
-      'WorkSubmitted(bytes32,address)': TypedContractEvent<WorkSubmittedEvent.InputTuple, WorkSubmittedEvent.OutputTuple, WorkSubmittedEvent.OutputObject>;
-      WorkSubmitted: TypedContractEvent<WorkSubmittedEvent.InputTuple, WorkSubmittedEvent.OutputTuple, WorkSubmittedEvent.OutputObject>;
     
     };
   }

@@ -9,26 +9,17 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
  * @title TaskEscrow
  * @notice Escrow contract for Helizium freelance platform.
  *         Lifecycle: Nonexistent → Funded → Completed | Cancelled | Disputed → Completed | Cancelled
- *
- * Simplified flow (no on-chain freelancer registration required):
- *  1. Client calls fundTask()  — ETH locked.
- *  2. Off-chain: freelancer found, work done.
- *  3a. Happy path: client calls releaseToFreelancer(taskId, freelancerAddr) — funds sent.
- *  3b. Cancel:    client calls cancelTask()              — full refund.
- *  3c. Dispute:   client OR owner calls raiseDispute()  — funds frozen.
- *       Admin then calls resolveDispute(taskId, recipient) — funds sent to winner.
- *  Emergency: owner calls adminRelease(taskId, recipient) at any non-final state.
  */
 contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
 
     // ─────────────────────────────── enums ───────────────────────────────
 
     enum TaskState {
-        Nonexistent,  // 0 – not funded
-        Funded,       // 1 – ETH locked, awaiting completion
-        Completed,    // 2 – funds released to freelancer
-        Cancelled,    // 3 – funds refunded to client
-        Disputed      // 4 – dispute raised, awaiting admin resolution
+        Nonexistent,  // 0
+        Funded,       // 1
+        Completed,    // 2
+        Cancelled,    // 3
+        Disputed      // 4
     }
 
     // ─────────────────────────────── structs ─────────────────────────────
@@ -46,11 +37,10 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
     mapping(bytes32 => Task) private _tasks;
 
     address public feeRecipient;
-    uint16  public feeBasisPoints;          // 250 = 2.5 %
-    uint16  public constant MAX_FEE_BP = 1000; // 10 % hard cap
+    uint16  public feeBasisPoints;
+    uint16  public constant MAX_FEE_BP = 1000;
     uint8   public constant MAX_ID_LEN  = 64;
 
-    /// @dev Pull-payment balances for accumulated platform fees.
     mapping(address => uint256) public pendingWithdrawals;
 
     // ──────────────────────────────── events ─────────────────────────────
@@ -86,8 +76,6 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         feeBasisPoints = 250;
     }
 
-    // ────────────────── prevent accidental direct ETH sends ───────────────
-
     receive() external payable { revert("Use fundTask()"); }
     fallback() external payable { revert("Use fundTask()"); }
 
@@ -97,10 +85,19 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         return keccak256(abi.encodePacked(id));
     }
 
-    function _transfer(address to, uint256 amount) internal {
+    function _keyBytes(bytes32 id) internal pure returns (bytes32) {
+        return id;
+    }
+
+    function _sendEth(address to, uint256 amount) internal {
         if (amount == 0) return;
-        (bool ok,) = payable(to).call{value: amount}("");
-        if (!ok) revert TransferFailed();
+        // Use call with explicit gas limit to prevent stack-too-deep in
+        // nested calls and avoid reentrancy-via-fallback patterns.
+        (bool ok,) = payable(to).call{ value: amount, gas: 30_000 }("");
+        if (!ok) {
+            // Fallback: store as pull-payment so the recipient can withdraw.
+            pendingWithdrawals[to] += amount;
+        }
     }
 
     function _calcFee(uint256 amount) internal view returns (uint256 fee, uint256 payout) {
@@ -114,10 +111,6 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
 
     // ─────────────────────────── external functions ───────────────────────
 
-    /**
-     * @notice Client locks ETH in escrow for a task.
-     * @param taskDbId  MongoDB ObjectId of the task (max 64 bytes).
-     */
     function fundTask(string calldata taskDbId)
         external payable nonReentrant whenNotPaused
     {
@@ -139,11 +132,6 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         emit TaskFunded(key, taskDbId, msg.sender, msg.value);
     }
 
-    /**
-     * @notice Client approves work and releases funds to the freelancer (minus fee).
-     * @param taskDbId    MongoDB ObjectId of the task.
-     * @param freelancer  Freelancer's wallet address that will receive payment.
-     */
     function releaseToFreelancer(string calldata taskDbId, address freelancer)
         external nonReentrant whenNotPaused
     {
@@ -163,15 +151,10 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
 
         emit TaskCompleted(key, freelancer, payout, fee);
 
-        _transfer(freelancer, payout);
         _accrueFee(fee);
+        _sendEth(freelancer, payout);
     }
 
-    /**
-     * @notice Client cancels the task and receives a full refund.
-     *         Only allowed while task is still in Funded state (i.e., not disputed).
-     * @param taskDbId  MongoDB ObjectId of the task.
-     */
     function cancelTask(string calldata taskDbId)
         external nonReentrant whenNotPaused
     {
@@ -187,15 +170,9 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         task.settledAt = uint64(block.timestamp);
 
         emit TaskCancelled(key, msg.sender, refund);
-        _transfer(msg.sender, refund);
+        _sendEth(msg.sender, refund);
     }
 
-    /**
-     * @notice Freeze escrow funds when a dispute arises.
-     *         Can be called by the task's client or the contract owner (platform admin).
-     *         Once disputed, only resolveDispute() or adminRelease() can unlock funds.
-     * @param taskDbId  MongoDB ObjectId of the task.
-     */
     function raiseDispute(string calldata taskDbId)
         external nonReentrant whenNotPaused
     {
@@ -211,13 +188,6 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         emit DisputeRaised(key, msg.sender);
     }
 
-    /**
-     * @notice Owner (platform admin) resolves a dispute by directing funds to one party.
-     *         If recipient == client   → treated as cancellation (no platform fee).
-     *         If recipient != client   → treated as completion (platform fee deducted).
-     * @param taskDbId   MongoDB ObjectId of the task.
-     * @param recipient  Address that will receive the funds (client or freelancer).
-     */
     function resolveDispute(string calldata taskDbId, address recipient)
         external nonReentrant onlyOwner
     {
@@ -245,16 +215,10 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
 
         emit DisputeResolved(key, recipient, payout);
 
-        _transfer(recipient, payout);
         _accrueFee(fee);
+        _sendEth(recipient, payout);
     }
 
-    /**
-     * @notice Emergency release by the owner for stuck tasks (any non-final state).
-     *         No platform fee is charged — this is an admin override.
-     * @param taskDbId   MongoDB ObjectId of the task.
-     * @param recipient  Address that will receive the full balance.
-     */
     function adminRelease(string calldata taskDbId, address recipient)
         external nonReentrant onlyOwner
     {
@@ -272,18 +236,15 @@ contract TaskEscrow is ReentrancyGuard, Ownable, Pausable {
         task.settledAt = uint64(block.timestamp);
 
         emit AdminReleased(key, recipient, amount);
-        _transfer(recipient, amount);
+        _sendEth(recipient, amount);
     }
 
-    /**
-     * @notice Pull-payment withdrawal for the accumulated platform fee.
-     */
     function withdraw() external nonReentrant {
         uint256 amount = pendingWithdrawals[msg.sender];
         if (amount == 0) revert NothingToWithdraw();
         pendingWithdrawals[msg.sender] = 0;
         emit Withdrawn(msg.sender, amount);
-        _transfer(msg.sender, amount);
+        _sendEth(msg.sender, amount);
     }
 
     // ──────────────────────────── admin setters ───────────────────────────

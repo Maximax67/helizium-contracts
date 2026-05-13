@@ -17,6 +17,10 @@ const config: HardhatUserConfig = {
     hardhat: {
       type: 'edr-simulated',
       chainId: 31337,
+      allowUnlimitedContractSize: false,
+      gas: 12_000_000,
+      blockGasLimit: 30_000_000,
+      initialBaseFeePerGas: 0,
     },
   },
 };
